@@ -11,6 +11,44 @@ sed -i 's/192.168.1.1/192.168.106.1/g' package/base-files/files/bin/config_gener
 #        -e '/#*\/bin\/mount -o noatime,move \$2\/tmp \/tmp/a \\t\tmkdir -p /tmp && rm -rf /tmp/*;' \
 #        package/base-files/files/lib/functions/preinit.sh
 
+function cat_kernel_config() {
+  if [ -f $1 ]; then
+    cat >> $1 <<EOF
+CONFIG_BPF=y
+CONFIG_BPF_SYSCALL=y
+CONFIG_BPF_JIT=y
+CONFIG_CGROUPS=y
+CONFIG_KPROBES=y
+CONFIG_NET_INGRESS=y
+CONFIG_NET_EGRESS=y
+CONFIG_NET_SCH_INGRESS=m
+CONFIG_NET_CLS_BPF=m
+CONFIG_NET_CLS_ACT=y
+CONFIG_BPF_STREAM_PARSER=y
+CONFIG_DEBUG_INFO=y
+# CONFIG_DEBUG_INFO_REDUCED is not set
+CONFIG_DEBUG_INFO_BTF=y
+CONFIG_KPROBE_EVENTS=y
+CONFIG_BPF_EVENTS=y
+
+CONFIG_SCHED_CLASS_EXT=y
+CONFIG_PROBE_EVENTS_BTF_ARGS=y
+CONFIG_IMX_SCMI_MISC_DRV=y
+CONFIG_ARM64_CONTPTE=y
+CONFIG_TRANSPARENT_HUGEPAGE=y
+CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=y
+# CONFIG_TRANSPARENT_HUGEPAGE_MADVISE is not set
+# CONFIG_TRANSPARENT_HUGEPAGE_NEVER is not set
+EOF
+    echo "cat_kernel_config to $1 done"
+  fi
+}
+
+#修改jdc ax1800 pro 的内核大小为12M
+image_file='./target/linux/qualcommax/image/ipq60xx.mk'
+sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" $image_file
+cat_kernel_config "target/linux/qualcommax/ipq60xx/config-default"
+
 rm -rf package/emortal/luci-app-athena-led
 git clone --depth=1 https://github.com/NONGFAH/luci-app-athena-led package/luci-app-athena-led
 chmod +x package/luci-app-athena-led/root/etc/init.d/athena_led package/luci-app-athena-led/root/usr/sbin/athena-led
